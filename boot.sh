@@ -9,12 +9,20 @@
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
 
-# Wait for appache2. Assumption: other (e.g. apache) still need some time
+# Add to file "/etc/rc.local" the following line: /home/pi/pySocoLogger/boot.sh
+
 while (!(/etc/init.d/lighttpd status))
 do
-	sleep 1s 
+	sleep 1s
+	date >> /home/pi/pySocoLogger/test.txt 
 done
 
-tmux new -s pySocoLogger -d "python /home/pi/pySocoLogger/modbus.py"
+# sleep 10s
+# tmux new-session -s pySocoLogger -d "python /home/pi/pySocoLogger/modbus.py"
+# echo "Starting tmux session"
+sleep 20s
+tmux new-session -s pysoco -d
+tmux send-keys -t pysoco:0 "cd /home/pi/pySocoLogger" C-m
+tmux send-keys -t pysoco:0 "python /home/pi/pySocoLogger/modbus.py" C-m
 
 exit 0
