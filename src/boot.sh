@@ -9,7 +9,7 @@
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
 
-# Add to file "/etc/rc.local" the following line: /home/pi/pySocoLogger/boot.sh
+# Add to file "/etc/rc.local" the path to this file (e.g.: /home/pi/pySocoLogger/boot.sh)
 
 while (!(/etc/init.d/lighttpd status))
 do
