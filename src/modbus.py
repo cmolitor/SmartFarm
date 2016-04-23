@@ -25,13 +25,13 @@ def readChannels():
     		value = decoder.decode_32bit_int()/float(c['factor'])
     	else:
     		value = handle.registers[0]/float(c['factor'])
-    	print c['description'], ":", str(value)
+    	#print c['description'], ":", str(value)
     	listValues.append(value)	
 
-    #for i, channel in enumerate(listChannels):
+    for i, channel in enumerate(listChannels):
     	# print channel['description'],":", channel['uuid'], int(time.time()*1000), listValues[i]
     	# Here fire values into VZ middleware
-    	#addValue(channel['uuid'], int(time.time()*1000), listValues[i])
+    	addValue(channel['uuid'], int(time.time()*1000), listValues[i])
 	
 # Add measurement value
 def addValue(uuid, timestamp, value):
