@@ -17,14 +17,16 @@ def readChannels():
     listValues = list()
     for c in listChannels:
     	handle = client.read_holding_registers(c['register'],c['words'],unit=c['unit'])
-    	listValues.append(handle.registers[0]/float(c['factor']))
-    	#print c['description'],":", handle.registers[0]/float(c['factor'])
+    	listValues.append(handle.registers[c['words']-1]/float(c['factor']))
+    	print c['description'],":"
+	for xy in range(0,c['words']):
+		print  xy, handle.registers[xy]/float(c['factor'])
 
-    for i, channel in enumerate(listChannels):
+    #for i, channel in enumerate(listChannels):
     	# print channel['description'],":", channel['uuid'], int(time.time()*1000), listValues[i]
     	# Here fire values into VZ middleware
-    	addValue(channel['uuid'], int(time.time()*1000), listValues[i])
-
+    	# addValue(channel['uuid'], int(time.time()*1000), listValues[i])
+	
 # Add measurement value
 def addValue(uuid, timestamp, value):
 	url = strURL + "/data/" + uuid + ".json?operation=add&ts=" + str(timestamp) + "&value=" + str(value)
@@ -120,18 +122,18 @@ print(sys.version)
 
 # Add channels
 listChannels = list()
-listChannels.append({'description': "V1_ph2n", 'register': 51284, 'words': 1, 'unit': 0xFF, 'measurement': "voltage", 'factor': 100})
+#listChannels.append({'description': "V1_ph2n", 'register': 51284, 'words': 1, 'unit': 0xFF, 'measurement': "voltage", 'factor': 100})
 #listChannels.append({'description': "V2_ph2n", 'register': 51285, 'words': 1, 'unit': 0xFF, 'measurement': "voltage", 'factor': 100})
 #listChannels.append({'description': "V3_ph2n", 'register': 51286, 'words': 1, 'unit': 0xFF, 'measurement': "voltage", 'factor': 100})
-listChannels.append({'description': "frequency", 'register': 51287, 'words': 1, 'unit': 0xFF, 'measurement': "frequency", 'factor': 100})
-#listChannels.append({'description': "P", 'register': 51292, 'words': 1, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
-#listChannels.append({'description': "P1", 'register': 51296, 'words': 1, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
-#listChannels.append({'description': "P2", 'register': 51297, 'words': 1, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
-#listChannels.append({'description': "P3", 'register': 51298, 'words': 1, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
-#listChannels.append({'description': "Q", 'register': 51293, 'words': 1, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
-#listChannels.append({'description': "Q1", 'register': 51299, 'words': 1, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
-#listChannels.append({'description': "Q2", 'register': 51300, 'words': 1, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
-#listChannels.append({'description': "Q3", 'register': 51301, 'words': 1, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
+#listChannels.append({'description': "frequency", 'register': 51287, 'words': 1, 'unit': 0xFF, 'measurement': "frequency", 'factor': 100})
+listChannels.append({'description': "P", 'register': 50536, 'words': 2, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
+listChannels.append({'description': "P1", 'register': 50544, 'words': 2, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
+#listChannels.append({'description': "P2", 'register': 50546, 'words': 2, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
+#listChannels.append({'description': "P3", 'register': 50548, 'words': 2, 'unit': 0xFF, 'measurement': "activepower", 'factor': 100})
+listChannels.append({'description': "Q", 'register': 50538, 'words': 2, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
+listChannels.append({'description': "Q1", 'register': 50550, 'words': 2, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
+listChannels.append({'description': "Q2", 'register': 50552, 'words': 2, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
+listChannels.append({'description': "Q3", 'register': 50554, 'words': 2, 'unit': 0xFF, 'measurement': "reactivepower", 'factor': 100})
 
 # =======================
 # Initialization

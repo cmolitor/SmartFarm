@@ -9,20 +9,20 @@
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
 
-# Add to file "/etc/rc.local" the path to this file (e.g.: /home/pi/pySocoLogger/boot.sh)
+# Add to file "/etc/rc.local" the path to this file (e.g.: /home/pi/SmartFarm/src/boot.sh)
 
 while (!(/etc/init.d/lighttpd status))
 do
 	sleep 1s
-	date >> /home/pi/pySocoLogger/test.txt 
+	date >> /home/pi/SmartFarm/test.txt 
 done
 
 # sleep 10s
-# tmux new-session -s pySocoLogger -d "python /home/pi/pySocoLogger/modbus.py"
+# tmux new-session -s pySocoLogger -d "python /home/pi/SmartFarm/src/modbus.py"
 # echo "Starting tmux session"
 sleep 20s
 tmux new-session -s pysoco -d
-tmux send-keys -t pysoco:0 "cd /home/pi/pySocoLogger" C-m
-tmux send-keys -t pysoco:0 "python /home/pi/pySocoLogger/modbus.py" C-m
+tmux send-keys -t pysoco:0 "cd /home/pi/SmartFarm/src" C-m
+tmux send-keys -t pysoco:0 "python /home/pi/SmartFarm/src/modbus.py" C-m
 
 exit 0
