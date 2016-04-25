@@ -6,8 +6,9 @@ In the very future, some optimization could play a role which will make use of t
 # Project components
 
 - socolog: Tool/script to read data from Socomex Diris A40 using Modbus TCP (working)
-- aelog: Tool/script to read data from Siemens/Refusol/AE PV inverters (to bed one)
-- froniuslog: Tool/script to read data from Fronius PV inverters (to bed one)
+- aelog: Tool/script to read data from Siemens/Refusol/AE PV inverters (to be done)
+- froniuslog: Tool/script to read data from Fronius PV inverters (to be done)
+- g4glog: Tool/script to read data from G4Gas (to be done)
 
 # Boot script for starting all the scripts properly
 
