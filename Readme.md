@@ -1,21 +1,15 @@
 # General
 
-Project to read data from Socomec Diris A40 via ModbusTCP and storing data in volkszaehler (VZ) middleware and database.
-Furthermore, the idea is to send control signals to a Siemens Logo.
+Project to read data from several measurement devices, active electrical components like PV inverters and also to take some control actions, e.g. at a Siemens Logo.
 In the very future, some optimization could play a role which will make use of the solver `glpk` and it's python interface pyomo.
 
-# Hardware description
+# Project components
 
-- Socomec Diris A40
-- ETHERNET MODULE WITH MODBUS RTU GATEWAY – Ref. 48250204:
-   - MODBUS master gateway with RS485 3-point link with TCP.
-   - MODBUS TCP and MODBUS RTU protocols.
-   - WEB-server for product configuration, displaying the values and the diagnostics.
+- socolog: Tool/script to read data from Socomex Diris A40 using Modbus TCP (working)
+- aelog: Tool/script to read data from Siemens/Refusol/AE PV inverters (to bed one)
+- froniuslog: Tool/script to read data from Fronius PV inverters (to bed one)
 
-- Serial number 1: 1548231
-- Serial number 2: 0009
-
-# Boot script for starting metec_core properly
+# Boot script for starting all the scripts properly
 
 ## General on boot scripts
 
@@ -35,7 +29,7 @@ sudo nano /etc/rc.local
 the following line (example):
 
 ```
-/home/pi/pySocoLogger/boot.sh
+/home/pi/SmartFarm/boot.sh
 ```
 
 # Install Snap7 for communication with Siemens SPS
