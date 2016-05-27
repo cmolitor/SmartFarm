@@ -1,0 +1,14 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+
+\begin{document}
+
+\begin{align}
+	\text{maximize} & \sum_{t=1}^T{P_t^{Grid} \times price_t^{Grid}}\\
+	\text{s. t.} \nonumber \\
+	\dot Q_t^{Dmnd} &= -modlvl_t \times \dot Q_t^{Heater} + \dot Q_t^{Strg} \\
+	Q_t^{Strg} &= Q_{t-1}^{Strg} - \dot Q_t^{Strg} \times \Delta t \\
+	SoC_t^{min} &\leq \frac{Q_{t^Strg}}{Q^{StrgCap}} \leq SoC_t^{max} \\
+	P_t^Grid &= P_t^{Heater} \times modlvl_t
+\end{align}
+\end{document}
