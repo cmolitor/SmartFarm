@@ -9,6 +9,7 @@ import platform
 import matplotlib.pyplot as plt
 from pyomo.environ import *
 from pyomo.core import Var
+import xlwt
 
 #=====================================================================================
 # Input data
@@ -115,29 +116,48 @@ def pyomo_postprocess(options=None, instance=None, results=None):
   width = 4 # in inches
   height = 4
   # Plot the data
-  fig, ax = plt.subplots(dpi=500, nrows=4, ncols=1, sharex=True, sharey=False) # figsize=(width, height)
+  fig, ax = plt.subplots(dpi=500, nrows=5, ncols=1, sharex=True, sharey=False) # figsize=(width, height)
   plot1 = ax[0].step(time, price, color='#0072B2')
   plot2 = ax[1].step(time, modlvl, color='#0072B2')
   plot3 = ax[2].step(time, Qstrg[1:], color='#0072B2')
   plot4 = ax[3].step(time, PGrid, color='#0072B2')
+  plot5 = ax[4].step(time, demandThermal, color='#0072B2')
 
   ax[0].set_xlim(time[0], time[23])
   ax[1].set_ylim(-0.1, 1.1)
   ax[3].set_ylim(min(PGrid)*1.1, max(PGrid)*1.1)
 
-  ax[3].set_xlabel("Time in hours")
+  ax[4].set_xlabel("Time in hours")
   ax[0].set_ylabel("Price in \n €/MWh")
   ax[1].set_ylabel("Modulation \n level")
   ax[2].set_ylabel("Stored energy \n in Ws")
   ax[3].set_ylabel("P Grid \n in W")
+  ax[4].set_ylabel("Thermal demand")
 
   fig.subplots_adjust(left=0.14, right=0.98, top=0.98, hspace=0.05, wspace=0.02)
 
   fig.savefig("schedule.pdf")
 
+  # save the data
+  book = xlwt.Workbook()
+
+  sheet1 = book.add_sheet('Sheet 1')
+
+  sheet1.write(0, 0, "Price in ct/kWh")
+  sheet1.write(0, 1, "Modulation level")
+  sheet1.write(0, 2, "Stored energy in Ws")
+  sheet1.write(0, 3, "Grid feed-in in W")
+  sheet1.write(0, 4, "Thermal demand in W")
+
+  for i in range(len(price)):
+    sheet1.write(i+1, 0, price[i])
+    sheet1.write(i+1, 1, modlvl[i])
+    sheet1.write(i+1, 2, Qstrg[i+1])
+    sheet1.write(i+1, 3, PGrid[i])
+    sheet1.write(i+1, 4, demandThermal[i])
+
+  book.save('data.xls') # maybe can only write .xls format
   #plt.show()
-
-
 
   # for v in instance.component_objects(Var, active=True):
   #   #print("Variable", v)
