@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# start with following command in terminal: pyomo solve --solver=glpk /Users/christoph/Desktop/scheduling.py
+# start with following command in terminal: pyomo solve --solver=glpk ./scheduling.py
 
 # Import
 import numpy as np
@@ -167,7 +167,7 @@ def pyomo_postprocess(options=None, instance=None, results=None):
     sheet1.write(i+1, 3, PGrid[i])
     sheet1.write(i+1, 4, demandThermal[i])
 
-  book.save('data.xls') # maybe can only write .xls format
+  book.save('data.xls')
 
 #=====================================================================================
 # This is an optional code path that allows the script to be run outside of
