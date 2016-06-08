@@ -43,9 +43,10 @@ def init_prices(model, i):
   return float(price[i-1])
 
 #=====================================================================================
-# Creation of an Abstract Model
+# Create Abstract Model
 model = AbstractModel()
 
+# Scheduling Horizon
 model.T = Set(initialize=range(1,25)) # values: 1..24
 model.T0 = Set(initialize=range(0,25)) # values: 0..24
 
@@ -66,26 +67,32 @@ model.Qstrg = Var(model.T0, initialize=SoC_ini*Q_storage_cap, doc="Energy in sto
 model.pgrid = Var(model.T, initialize=0, doc="Power export to electrical grid")
 
 # Constraints
+# Contraint thermal energy balance system
 def cnstrThermalBalance(model, t):
   return (-model.qdmnd[t] == -model.modlvl[t] * model.qheater + model.qstrg[t])
 
+# Contraint thermal energy balance storage
 def cnstrStorageBalance(model, t):
-  # return the expression for the constraint for i
   return (model.Qstrg[t] == model.Qstrg[t-1] + model.qstrg[t] * model.dt)
 
+# Constarint State of Charge (SoC) of storage
 def cnstrSoC(model, t):
   # return the expression for the constraint for i
   return (model.SoCmin <= model.Qstrg[t]/model.QstrgCap <= model.SoCmax)
-  
+
+# Expression grid export/import
 def cnstrGrid(model, t):
   # return the expression for the constraint for i
   return (model.pheater * model.modlvl[t] == model.pgrid[t])
 
+# Expression objective function
 def obj_expression(model):
   return sum(model.pgrid[t] * model.pricegrid[t] for t in model.T)
 
+# Set objective function
 model.obj = Objective(rule=obj_expression, sense=minimize)
 
+# Add constraints to model
 model.CnstrThermalBalance = Constraint(model.T, rule=cnstrThermalBalance)
 model.CnstrStorageBalance = Constraint(model.T, rule=cnstrStorageBalance)
 model.CnstrSoC = Constraint(model.T, rule=cnstrSoC)
@@ -106,7 +113,9 @@ def readVarValues(var_name, instance):
         listReturn.append(varobject[index].value)
   return listReturn
 
+# Pyomo postprocessing. Called by pyomo after solving
 def pyomo_postprocess(options=None, instance=None, results=None):
+  # Print python version
   print(platform.python_version())
 
   modlvl = readVarValues("modlvl", instance)
@@ -114,7 +123,8 @@ def pyomo_postprocess(options=None, instance=None, results=None):
   PGrid = readVarValues("pgrid", instance)
 
   width = 4 # in inches
-  height = 4
+  height = 4 # in inches
+  
   # Plot the data
   fig, ax = plt.subplots(dpi=500, nrows=5, ncols=1, sharex=True, sharey=False) # figsize=(width, height)
   plot1 = ax[0].step(time, price, color='#0072B2')
@@ -138,7 +148,7 @@ def pyomo_postprocess(options=None, instance=None, results=None):
 
   fig.savefig("schedule.pdf")
 
-  # save the data
+  # Export data to Excel workbook
   book = xlwt.Workbook()
 
   sheet1 = book.add_sheet('Sheet 1')
@@ -157,14 +167,6 @@ def pyomo_postprocess(options=None, instance=None, results=None):
     sheet1.write(i+1, 4, demandThermal[i])
 
   book.save('data.xls') # maybe can only write .xls format
-  #plt.show()
-
-  # for v in instance.component_objects(Var, active=True):
-  #   #print("Variable", v)
-  #   if str(v) == "modlvl":
-  #     varobject = getattr(instance, str(v))
-  #     for index in varobject:
-  #       print(varobject[index].value)
 
 #=====================================================================================
 # This is an optional code path that allows the script to be run outside of
