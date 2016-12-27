@@ -17,7 +17,7 @@ sudo sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
 
 Pakete welche an die IP des Logportals gehen and die IP des Raspi umleiten
 sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry
-sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination 192.168.0.212
+sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212
 
 Pakete als absender die IP des Raspi eintragen
 sudo iptables -t nat -A POSTROUTING -j MASQUERADE
@@ -26,7 +26,7 @@ Damit dies auch nach einem Neustart funktioniert auch in die crontab eintragen:
 sudo crontab -e
 @reboot sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry; sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 sudo crontab -e
-@reboot sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination 192.168.0.212; sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+@reboot sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212; sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 Im Program muss in der main schleife noch die IP des Raspberry geändert werden,
 sowie die Pfade datalogfile und errlogfile für den Speicherort der .csv files.
