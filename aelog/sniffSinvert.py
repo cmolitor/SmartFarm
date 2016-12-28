@@ -344,7 +344,9 @@ def main():
     client_socket.send(block)#Sende empfangene Daten von WR zu Portal
     daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
     datenstring = bytes2string(daten)
+    print("-----------------------------")
     print(datenstring)
+    print("-----------------------------")
 
     client_socket.close()
     del client_socket
