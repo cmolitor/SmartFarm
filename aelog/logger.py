@@ -2,8 +2,6 @@ import socket
 import sys
 import struct
 import time
-from BaseHTTPServer import BaseHTTPRequestHandler
-from StringIO import StringIO
 
 """
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
@@ -45,18 +43,6 @@ TODO:
  - Mailversand wenn Störungen auftreten
  - ev. grafische anzeige der Daten...
 """
-
-class HTTPRequest(BaseHTTPRequestHandler):
-  def __init__(self, request_text):
-    self.rfile = StringIO(request_text)
-    self.raw_requestline = self.rfile.readline()
-    self.error_code = self.error_message = None
-    self.parse_request()
-
-  def send_error(self, code, message):
-    self.error_code = code
-    self.error_message = message
-
 
 def byteorder():
   return sys.byteorder
@@ -344,11 +330,6 @@ def main():
     print("================= Beginn Daten =================")
     print(bytes2string(block))
     print("================= Ende Daten =================")
-
-    request = HTTPRequest(bytes2string(block))
-
-    print("print request.request_version: ", request.request_version)
-
 
     """
     #Sende zu Sitelink
