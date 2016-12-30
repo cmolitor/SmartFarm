@@ -3,7 +3,7 @@ import sys
 import struct
 import time
 from http.client import HTTPResponse
-from StringIO import StringIO
+from io import io.StringIO
 
 """
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
@@ -48,7 +48,7 @@ TODO:
 
 class FakeSocket():
   def __init__(self, response_str):
-    self._file = StringIO(response_str)
+    self._file = io.StringIO(response_str)
   def makefile(self, *args, **kwargs):
     return self._file
 
