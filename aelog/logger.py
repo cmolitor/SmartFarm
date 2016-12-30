@@ -339,7 +339,7 @@ def main():
     print(bytes2string(block))
     print("================= Ende Daten =================")
 
-    source = FakeSocket(bytes2string(block)
+    source = FakeSocket(bytes2string(block))
     response = HTTPResponse(source)
     response.begin()
 
