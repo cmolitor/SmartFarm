@@ -2,6 +2,8 @@ import socket
 import sys
 import struct
 import time
+from http.client import HTTPResponse
+from StringIO import StringIO
 
 """
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
@@ -43,6 +45,12 @@ TODO:
  - Mailversand wenn Störungen auftreten
  - ev. grafische anzeige der Daten...
 """
+
+class FakeSocket():
+  def __init__(self, response_str):
+    self._file = StringIO(response_str)
+  def makefile(self, *args, **kwargs):
+    return self._file
 
 def byteorder():
   return sys.byteorder
@@ -330,6 +338,12 @@ def main():
     print("================= Beginn Daten =================")
     print(bytes2string(block))
     print("================= Ende Daten =================")
+
+    source = FakeSocket(bytes2string(block)
+    response = HTTPResponse(source)
+    response.begin()
+
+    print("single header:", response.getheader('Content-Type'))
 
     """
     #Sende zu Sitelink
