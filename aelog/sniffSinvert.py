@@ -3,11 +3,13 @@ import sys
 import struct
 import time
 """
+Version: RcvSendSinvertDaten_V3.py
+
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
 Getestet mit einem Sinvert PVM20 und einem RaspberryPi B
 
 Einstellungen im Wechselrichter:
-IP: Freie IP-Adresse im lokalen Netzwer
+IP: Freie IP-Adresse im lokalen Netzwerk
 Netmask: 255.255.255.0
 Gateway: IP-Adresse des Rechners auf dessen dieses Prg läuft(zb. Raspberry),
 
@@ -17,31 +19,51 @@ sudo sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
 
 Pakete welche an die IP des Logportals gehen and die IP des Raspi umleiten
 sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry
-sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212
 
 Pakete als absender die IP des Raspi eintragen
-sudo iptables -t nat -A POSTROUTING -j MASQUERADE
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 Damit dies auch nach einem Neustart funktioniert auch in die crontab eintragen:
 sudo crontab -e
-@reboot sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry; sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-sudo crontab -e
-@reboot sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212; sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+@reboot sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry;sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
-Im Program muss in der main schleife noch die IP des Raspberry geändert werden,
+Im Program muss noch die IP des Raspberry geändert werden,
 sowie die Pfade datalogfile und errlogfile für den Speicherort der .csv files.
-Die Pfade müssen existieren, diese werden nicht automatisch erzeugt!
+Die Pfade(Ordner) müssen existieren, diese werden nicht automatisch erzeugt!
 
 Start des Programms via Kommandozeile
-sudo python3 /home/pi/Progs/RcvSendSinvertDaten_V2.py
+sudo python3 /home/pi/RcvSendSinvertDaten_V3.py
 
-Benutzung auf eigene Gefahr! Keine Garantie/Gewährleistung
+Benutzung auf eigene Gefahr! Keine Garantie/Gewährleistung.
 
 TODO:
  - Exceptionhandling optimieren
+ - Codeoptimierungen...
  - Mailversand wenn Störungen auftreten
+ - Störungsnummern wandeln in Störungstext
  - ev. grafische anzeige der Daten...
+ - Log Messages ergänzen
 """
+
+#Define Pfad für CSV-Files, sind den eigenen Bedürfnissen anzupassen
+#datalogfile = "E:\" + time.strftime("\%Y_%m_DataSinvert") + '.csv' #Beispiel für Windows
+#errlogfile = "E:\" + time.strftime("\%Y_%m_ErrSinvert") + '.csv'#Beispiel für Windows
+datalogfile = "/home/pi/" + time.strftime("%Y_%m_DataSinvert") + '.csv'
+errlogfile = "/home/pi/" + time.strftime("%Y_%m_ErrSinvert") + '.csv'
+
+#Zeichenfolgen für Daten sind bei den verschiedenen Firmwareständen unterschiedlich:
+#je nach Firmware mit "#" auskommentieren bzw. einkommentieren
+
+#macaddr,endmacaddr = 'm="','"'#für neuere firmwares
+macaddr,endmacaddr = '<m>','</m>'#für ältere firmwares
+
+#firmware,endfirmware = 's="','"'#für neuere firmwares
+firmware,endfirmware = '<s>','</s>'#für ältere firmwares
+
+rasp_ip = ''#IP- des Raspi angeben, wenn keine IP angeben wird ==> Raspi lauscht auf allen zugewiesenen IP Adressen
+rasp_port = 80 #Port auf dem das prg am raspi lauscht
+
+
 def byteorder():
   return sys.byteorder
 
@@ -123,14 +145,16 @@ def initerrlogfile(errlogfile):
 def decodedata(rcv):#Daten decodieren
   string = []
 
-  index = 'm="'
+  index = macaddr
+  endindex = endmacaddr
   if rcv.find(index) >= 0:
-    string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
+    string.append(str(rcv[rcv.find(index)+3:rcv.find(endindex,rcv.find(index)+3)]))
   else:
     string.append('0')
-  index = 's="'
+  index = firmware
+  endindex = endfirmware
   if rcv.find(index) >= 0:
-    string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
+    string.append(str(rcv[rcv.find(index)+3:rcv.find(endindex,rcv.find(index)+3)]))
   else:
     string.append('0')
   index = 't="'
@@ -240,12 +264,12 @@ def decodedata(rcv):#Daten decodieren
 def decodeerr(rcv):#Störungen decodieren
   string = []
 
-  index = 'm="'
+  index = macaddr
   if rcv.find(index) >= 0:
     string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
   else:
     string.append('0')
-  index = 's="'
+  index = firmware
   if rcv.find(index) >= 0:
     string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
   else:
@@ -289,88 +313,125 @@ def decodeerr(rcv):#Störungen decodieren
   print(returnval)
   return returnval
 
+def send2portal(addr,port,data):
+    #Sende zu Sitelink/Refu-Log Portal
+    server_addr = (addr, port)
+    print(server_addr)
+    try:
+      client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      client_socket.settimeout(5)
+      client_socket.connect(server_addr)
+      sendcontent = data[data.find('xmlData'):]
+      senddata = ('POST /InverterService/InverterService.asmx/CollectInverterData HTTP/1.1\r\n'
+                  +'Host: refu-log.de\r\n'
+                  +'Content-Type: application/x-www-form-urlencoded\r\n'
+                  +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
+                  +'\r\n'
+                  + sendcontent)
+      print('Senddata: ' + senddata)
+      client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
+      daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
+      datenstring = bytes2string(daten)
+      print(datenstring)
+    except BaseException as e:
+      print(str(e) + '\r\n')
+    client_socket.close()
+    del client_socket
+
+def getokmsg():
+    return ('HTTP/1.1 200 OK'
+    +'Cache-Control: private, max-age=0'
+    +'Content-Type: text/xml; charset=utf-8\r\n'
+    +'Content-Length: 83\r\n'
+    +'\r\n'
+    +'<?xml version="1.0" encoding="utf-8"?>'
+    +'<string xmlns="InverterService">OK</string>\r\n')
+
+#Hole aktuelle Zeit:
+def getNTPTime(host = "at.pool.ntp.org"):
+  port = 123
+  buf = 1024
+  address = (host,port)
+  msg = '\x1b' + 47 * '\0'
+
+  # reference time (in seconds since 1900-01-01 00:00:00)
+  TIME1970 = 2208988800 # 1970-01-01 00:00:00
+
+  # connect to server
+  client_socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM)
+  client_socket.sendto(string2bytes(msg), address)
+  msg, address = client_socket.recvfrom( buf )
+  t = struct.unpack( "!12I", msg )[10]
+  t -= TIME1970
+  client_socket.close()
+  del client_socket
+  return time.strftime('%d.%m.%Y %H:%M:%S', time.localtime(t))
+
+def gettimemsg():
+  try:
+    sendcontent = ('<?xml version="1.0" encoding="utf-8"?>'
+                   +'<string xmlns="InverterService">&lt;crqr&gt;&lt;c n="SETINVERTERTIME" i="0"&gt;&lt;p n="date" t="3"&gt;'
+                   +getNTPTime()
+                   +'&lt;/p&gt;&lt;/c&gt;&lt;/crqr&gt;</string>')
+    return ('HTTP/1.1 200 OK'
+    +'Cache-Control: private, max-age=0'
+    +'Content-Type: text/xml; charset=utf-8\r\n'
+    +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
+    +'\r\n'
+    + sendcontent)
+  except BaseException as e:
+    print(str(e) + '\r\n')
+    return getokmsg()#Wenn Zeit holen nicht möglich, nur Ok message schicken
+
 #Hier startet Main prg
 def main():
   global server_socket
   #Init TCP-Server
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+  server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)#Bei Neustart wiederverwenden des Sockets ermöglichen
   #Server binden mit der IP des Raspi
   #server_socket.bind((socket.gethostbyname(socket.gethostname()), 80))
   #Raspi muss eine fixe IP haben!
-  server_socket.bind(('192.168.0.212', 80))
+  #server_socket.bind(('10.0.0.25', 80))
+  server_socket.bind((rasp_ip, rasp_port))#Keine IP angeben ==> Raspi lauscht auf allen zugewiesenen IP Adressen
 
   #print(socket.gethostbyname(socket.gethostname()))
   while True:
     print('Listen for Data')
     rcvdatenstring = ''
     block = string2bytes('')
+    rcvbytes = string2bytes('')
     server_socket.listen(5)#Socket beobachten
     print('Daten Lesen')
     client_serving_socket, addr = server_socket.accept()
-    print(addr)
-    print("Weiter geht es..")
+    client_serving_socket.settimeout(5)
+  
     while True:
-      rcvbytes = client_serving_socket.recv(1024)#Daten empfangen
-      print(bytes2string(rcvbytes))
-
-      rcvdatenstring = rcvdatenstring + bytes2string(rcvbytes)
-      rcvok = rcvdatenstring.find('xmlData')
-      print(rcvok)
-      if rcvok >= 0:#Solange Daten lesen, bis xmlData empfangen wurden
+      try:
+        rcvbytes = client_serving_socket.recv(1024)#Daten empfangen
+        print(bytes2string(rcvbytes))
+        rcvdatenstring = rcvdatenstring + bytes2string(rcvbytes)
+        rcvok = rcvdatenstring.find('xmlData')
+        print(rcvok)
+      except BaseException as e:
+        print(str(e) + '\r\n')
+        print(rcvbytes)
+      if (rcvok >= 0) or (not rcvbytes):#Solange Daten lesen, bis xmlData empfangen wurden
         block = block+rcvbytes
         break
       else:
         block = block+rcvbytes
-    """
-    #Sende zu Sitelink
-    server_addr = ('aesitelink.de', 80)
-    print(server_addr)
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(server_addr)
-    client_socket.send(block)
-    print(bytes2string(block))
+        rcvbytes = string2bytes('')
     
-    daten = client_socket.recv(1024)
-    datenstring = bytes2string(daten)
-    print(datenstring)
-    """
-    
-    #Sende zu Refulog
-    server_addr = ('refu-log.de', 80)
-    print(server_addr)
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(server_addr)
-    client_socket.send(block)#Sende empfangene Daten von WR zu Portal
-    daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
-    datenstring = bytes2string(daten)
-    print("Begin Datenstring refu-log.de-----------------------------")
-    print(datenstring)
-    print("Ende  Datenstring refu-log.de-----------------------------")
-
-    client_socket.close()
-    del client_socket
-    
-
-    #Dem WR eine OK Nachricht schicken
-    client_serving_socket.send(string2bytes('HTTP/1.1 200 OK'
-    +'Cache-Control: private, max-age=0'
-    +'Content-Type: text/xml; charset=utf-8\r\n'
-    +'Content-Length: 83\r\n'
-    +'\r\n'
-    +'<?xml version="1.0" encoding="utf-8"?>'
-    +'<string xmlns="InverterService">OK</string>\r\n'))
-
-    client_serving_socket.close()
-    del client_serving_socket
+    #Sende zu Sitelink, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
+    send2portal('aesitelink.de', 80, rcvdatenstring)
+    #Sende zu Refu-log, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
+    send2portal('refu-log.de', 80, rcvdatenstring)    
 
     #Werte dekodieren und in csv schreiben
-    #Define Pfad für CSV-Files
-    datalogfile = "./data/" + time.strftime("%Y_%m_DataSinvert") + '.csv'
-    errlogfile = "./error/" + time.strftime("%Y_%m_ErrSinvert") + '.csv'
 
     #Prüfe ob Störungen oder Daten empfangen wurden
-    if rcvdatenstring.find('<rd m="') >= 0:#Wenn Daten empfangen, dann in datalogfile schreiben
+    if rcvdatenstring.find('<rd') >= 0:#Wenn Daten empfangen, dann in datalogfile schreiben
 
       try:#Prüfe ob Datei existiert
         f = open(datalogfile, 'r')
@@ -384,8 +445,10 @@ def main():
       f = open(datalogfile, 'a')
       f.write(decodedata(rcvdatenstring))
       f.close()
+      #Dem WR eine OK Nachricht schicken
+      client_serving_socket.send(string2bytes(getokmsg()))
       
-    elif rcvdatenstring.find('<re m="') >= 0:#Wenn Daten empfangen, dann in errlogfile schreiben
+    elif rcvdatenstring.find('<re') >= 0:#Wenn Errordaten empfangen, dann in errlogfile schreiben
 
       try:#Prüfe ob Datei existiert
         f = open(errlogfile, 'r')
@@ -399,15 +462,31 @@ def main():
       f = open(errlogfile, 'a')
       f.write(decodeerr(rcvdatenstring))
       f.close()
+      #Dem WR eine OK Nachricht schicken
+      client_serving_socket.send(string2bytes(getokmsg()))
+      
+    elif rcvdatenstring.find('<crq>') >= 0:#Wenn Steuerdaten empfangen, dann in Uhrzeit setzen
+      #Dem WR aktuelle Uhrzeit schicken schicken
+      client_serving_socket.send(string2bytes(gettimemsg()))
+
+
     else:#Bei falschem Format nur Ausgeben
       print('Falsches Datenformat empfangen!\r\n')
       print(rcvdatenstring)
+      #Dem WR eine OK Nachricht schicken
+      client_serving_socket.send(string2bytes(getokmsg()))
 
-#while True:
-try:
-  main()
-except BaseException as e:#bei einer Exception Verbindung schließen und neu starten
-  print(str(e) + '\r\n')
-  server_socket.close()
-  del server_socket
+    #Verbindung schließen
+    client_serving_socket.close()
+    del client_serving_socket
+
+
+while True:
+  try:
+    main()
+  except BaseException as e:#bei einer Exception Verbindung schließen und neu starten
+    print(str(e) + '\r\n')
+    server_socket.close()
+    del server_socket
+  time.sleep(10)#10s warten
 #ServerEnde
