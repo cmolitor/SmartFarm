@@ -355,10 +355,12 @@ def main():
     print("Begin Datenstring refu-log.de-----------------------------")
     print(datenstring)
     print("Ende  Datenstring refu-log.de-----------------------------")
-    """
+    
 
     client_socket.close()
     del client_socket
+
+    """
     
 
     #Dem WR eine OK Nachricht schicken
