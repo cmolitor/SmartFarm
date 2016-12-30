@@ -345,7 +345,12 @@ def main():
     print("ok 2")
     print("response: ", response)
 
-    print("single header:", response.getheader('Content-Type'))
+    hallotest = response.read().decode('utf-8')
+    print("ok 3")
+
+    print("Data: ", hallotest)
+
+    # print("single header:", response.getheader('Content-Type'))
 
     """
     #Sende zu Sitelink
