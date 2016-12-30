@@ -340,8 +340,11 @@ def main():
     print("================= Ende Daten =================")
 
     source = FakeSocket(bytes2string(block))
+    print("ok 1")
     response = HTTPResponse(source)
+    print("ok 2")
     response.begin()
+    print("ok 3")
 
     print("single header:", response.getheader('Content-Type'))
 
