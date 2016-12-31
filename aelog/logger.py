@@ -2,8 +2,9 @@ import socket
 import sys
 import struct
 import time
-from http.client import HTTPResponse
 from io import BytesIO
+import email
+from io import StringIO
 
 """
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
@@ -46,11 +47,20 @@ TODO:
  - ev. grafische anzeige der Daten...
 """
 
-class FakeSocket():
-  def __init__(self, response_str):
-    self._file = BytesIO(response_str)
-  def makefile(self, *args, **kwargs):
-    return self._file
+class Request:
+  def __init__(self, request):
+    stream = StringIO(request)
+    request = stream.readline()
+
+    words = request.split()
+    [self.command, self.path, self.version] = words
+
+    self.headers = email.message_from_string(request)
+    self.content = stream.read()
+
+  def __getitem__(self, key):
+    return self.headers.get(key, '')
+
 
 def byteorder():
   return sys.byteorder
@@ -339,16 +349,18 @@ def main():
     print(bytes2string(block))
     print("================= Ende Daten =================")
 
-    source = FakeSocket(block)
-    print("ok 1")
-    response = HTTPResponse(source)
-    print("ok 2")
-    print("response: ", response)
+    print("================= Beginn HTTP Objekt =================")
+    r = Request(bytes2string(block))
+    print(r.command)
+    print(r.path)
+    print(r.version)
 
-    hallotest = response.read().decode('utf-8')
-    print("ok 3")
+    for header in r.headers:
+        print(header, r[header])
 
-    print("Data: ", hallotest)
+    print(r.content)
+
+    print("================= Ende HTTP Objekt =================")
 
     # print("single header:", response.getheader('Content-Type'))
 
