@@ -10,4 +10,4 @@ def dataCollector():
 	# parseData. Take a look at ElementTree
 
 if __name__ == "__main__":
-	app.run(host=0.0.0.0, port=80)
+	app.run(host=192.168.0.212, port=80)
