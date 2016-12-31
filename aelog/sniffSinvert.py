@@ -19,6 +19,7 @@ sudo sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
 
 Pakete welche an die IP des Logportals gehen and die IP des Raspi umleiten
 sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry
+sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212
 
 Pakete als absender die IP des Raspi eintragen
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
@@ -60,7 +61,7 @@ macaddr,endmacaddr = '<m>','</m>'#für ältere firmwares
 #firmware,endfirmware = 's="','"'#für neuere firmwares
 firmware,endfirmware = '<s>','</s>'#für ältere firmwares
 
-rasp_ip = ''#IP- des Raspi angeben, wenn keine IP angeben wird ==> Raspi lauscht auf allen zugewiesenen IP Adressen
+rasp_ip = '192.168.0.212'#IP- des Raspi angeben, wenn keine IP angeben wird ==> Raspi lauscht auf allen zugewiesenen IP Adressen
 rasp_port = 80 #Port auf dem das prg am raspi lauscht
 
 
