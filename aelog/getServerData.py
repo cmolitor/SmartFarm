@@ -153,13 +153,9 @@ if __name__ == "__main__":
 
 			getInverterData(user, password, inverterSerial, inverterID, fromTime, toTime)
 	else: # define serial and ID manually for single inverter
-		inverterSerial = "LBAN02261010322"
-		inverterID = "61592"
+		inverterSerial = "x"
+		inverterID = "x"
 		print("Reading data of inverter with serial: ", inverterSerial, " ID:", inverterID)
 		getInverterData(user, password, inverterSerial, inverterID, fromTime, toTime)
-		# LBAN02261010320   LBAN02261010320   61595  done
-		# LBAN02261010321   LBAN02261010321   61594  done
-		# LBAN02261010322   LBAN02261010322   61592  
-		# LBAN02261010323   LBAN02261010323   61593
-		# LBAN02261010670   LBAN02261010670   61591
+
 
