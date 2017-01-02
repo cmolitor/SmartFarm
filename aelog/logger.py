@@ -321,36 +321,26 @@ def main():
   server_socket.bind(('192.168.0.212', 80))
 
   while True:
-    print('Listen for Data')
     rcvdatenstring = ''
-    block = string2bytes('')
-    server_socket.listen(5)#Socket beobachten
-    print('Daten Lesen')
+    rcdvMessageBytes = string2bytes('')
+    server_socket.listen(5) # Socket beobachten
     client_serving_socket, addr = server_socket.accept()
-    i = 0
-
+    print('Listening for data...')
     while True:
-      i = i + 1
       rcvbytes = client_serving_socket.recv(1024) # Daten empfangen
-      print("----------- Beginn Datenpaket: ", i, " -----------------------------")
-      print(bytes2string(rcvbytes))
-      print("----------- Ende Datenpaket -----------------------------")
 
       rcvdatenstring = rcvdatenstring + bytes2string(rcvbytes)
       rcvok = rcvdatenstring.find('xmlData')
-      print(rcvok)
+      # print(rcvok)
       if rcvok >= 0:#Solange Daten lesen, bis xmlData empfangen wurden
-        block = block+rcvbytes
+        rcdvMessageBytes = rcdvMessageBytes+rcvbytes
         break
       else:
-        block = block+rcvbytes
+        rcdvMessageBytes = rcdvMessageBytes+rcvbytes
 
-    print("================= Beginn Daten =================")
-    print(bytes2string(block))
-    print("================= Ende Daten =================")
-
-    print("================= Beginn HTTP Objekt =================")
-    r = Request(bytes2string(block))
+    # Create HTTP Request object
+    print("================= Begin HTTP object =================")
+    r = Request(bytes2string(rcdvMessageBytes))
     print(r.command)
     print(r.path)
     print(r.version)
@@ -360,7 +350,7 @@ def main():
 
     print(r.content)
 
-    print("================= Ende HTTP Objekt =================")
+    print("================= End HTTP object =================")
 
     # print("single header:", response.getheader('Content-Type'))
 
