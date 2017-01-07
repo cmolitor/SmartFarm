@@ -2,9 +2,11 @@ import socket
 import sys
 import struct
 import time
-from io import BytesIO
 import email
+import xml.etree.ElementTree as ET
+from io import BytesIO
 from io import StringIO
+
 
 """
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
@@ -16,8 +18,11 @@ Netmask: 255.255.255.0
 Gateway: IP-Adresse des Rechners auf dessen dieses Prg läuft(zb. Raspberry),
 
 Einstellungen am Rechner(zb. Raspberry)
-routing aktivieren
+routing aktivieren nach jedem Neustart:
 sudo sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
+oder einmailig:
+sudo nano /etc/sysctl.conf 
+und for "net.ipv4.ip_forward=1" # entfernen; d.h. reinkommentieren
 
 Pakete welche an die IP des Logportals gehen and die IP des Raspi umleiten
 sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry
@@ -32,421 +37,238 @@ sudo crontab -e
 sudo crontab -e
 @reboot sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212; sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
-Im Program muss in der main schleife noch die IP des Raspberry geändert werden,
-sowie die Pfade datalogfile und errlogfile für den Speicherort der .csv files.
-Die Pfade müssen existieren, diese werden nicht automatisch erzeugt!
 
-Start des Programms via Kommandozeile
-sudo python3 /home/pi/Progs/RcvSendSinvertDaten_V2.py
+Start des Programms via Kommandozeile:
+sudo python3 nameDerDatei.py
 
-Benutzung auf eigene Gefahr! Keine Garantie/Gewährleistung
-
-TODO:
- - Exceptionhandling optimieren
- - Mailversand wenn Störungen auftreten
- - ev. grafische anzeige der Daten...
 """
 
 class Request:
-  def __init__(self, request):
-    stream = StringIO(request)
-    request = stream.readline()
+	def __init__(self, request):
+		stream = StringIO(request)
+		request = stream.readline()
 
-    words = request.split()
-    [self.command, self.path, self.version] = words
+		words = request.split()
+		[self.command, self.path, self.version] = words
 
-    self.headers = email.message_from_string(request)
-    self.content = stream.read()
+		self.headers = email.message_from_string(request)
+		self.content = stream.read()
 
-  def __getitem__(self, key):
-    return self.headers.get(key, '')
-
+	def __getitem__(self, key):
+		return self.headers.get(key, '')
 
 def byteorder():
-  return sys.byteorder
+	return sys.byteorder
 
 def standard_encoding():
-  return sys.getdefaultencoding()
+	return sys.getdefaultencoding()
 
 def standardausgabe_encoding():
-  return sys.stdout.encoding
+	return sys.stdout.encoding
 
 def string2bytes(text):
-  return bytes(text, "utf8")
+	return bytes(text, "utf8")
 
 def bytes2string(bytes):
-  return str(bytes, "utf8")
+	return str(bytes, "utf8")
 
 def converthex2float(hexval):
-  #print(hexval)
-  try:
-    return round(struct.unpack('>f', struct.pack('>I', int(float.fromhex(hexval))))[0],2)
-  except BaseException as e:
-    print(str(e) + '\r\n')
-    return 0
+	#print(hexval)
+	try:
+		return round(struct.unpack('>f', struct.pack('>I', int(float.fromhex(hexval))))[0],2)
+	except BaseException as e:
+		print(str(e) + '\r\n')
+		return 0
 
 def converthex2int(hexval):
-  #print(hexval)
-  try:
-    return struct.unpack('>i', struct.pack('>I', int(float.fromhex(hexval))))[0]
-  except BaseException as e:
-    print(str(e) + '\r\n')
-    return 0
+	#print(hexval)
+	try:
+		return struct.unpack('>i', struct.pack('>I', int(float.fromhex(hexval))))[0]
+	except BaseException as e:
+		print(str(e) + '\r\n')
+		return 0
 
-def initdatalogfile(datalogfile):
-  string = []
+def convertHex2SignedInt16bit(_hex):
+	x = int(_hex, 16)
+	# check sign bit
+	if (x & 0x8000) == 0x8000:
+		# if set, invert and add one to get the negative value, then add the negative sign
+		x = -( (x ^ 0xffff) + 1)
 
-  string.append('MAC-Adresse')
-  string.append('Seriennummer')
-  string.append('Zeitstempel')
-  string.append('Loggerinterval')
-  string.append('AC Momentanleistung [W]')
-  string.append('AC Netzspannung [V]')
-  string.append('AC Strom [A]')
-  string.append('AC Frequenz [Hz]')
-  string.append('DC Momentanleistung [W]')
-  string.append('DC-Spannung [V]')
-  string.append('DC-Strom [A]')
-  string.append('Temperatur 1 Kühlkörper rechts [°C]')
-  string.append('Temperatur 2 innen oben links [°C]')
-  string.append('optional, vielleicht: Einstrahlung')
-  string.append('optional, vielleicht: Modultemperatur')
-  string.append('Tagesertrag [kwh]')
-  string.append('Status')
-  string.append('Gesamtertrag [kwh]')
-  string.append('Betriebsstunden [h]')
-  string.append('scheinbar nur ältere FW?')
-  string.append('"neuere" FW: 100.0% Leistungsbeschränkung [%]')
-  string.append('"neuere" FW, vielleicht: 0.0 kWh Tagessonnenenergie')
-  returnval = (str(string).replace("', '",';').replace("['",'').replace("']",'\r\n'))
-  f = open(datalogfile, 'a')
-  f.write(returnval)
-  f.close()
+	return x
 
-def initerrlogfile(errlogfile):
-  string = []
-
-  string.append('MAC-Adresse')
-  string.append('Seriennummer')
-  string.append('Zeitstempel')
-  string.append('Errorcode')
-  string.append('State')
-  string.append('Short')
-  string.append('Long')
-  string.append('Type')
-  string.append('Actstate')
-  returnval = (str(string).replace("', '",';').replace("['",'').replace("']",'\r\n'))
-  f = open(errlogfile, 'a')
-  f.write(returnval)
-  f.close()
-
-def decodedata(rcv):#Daten decodieren
-  string = []
-
-  index = 'm="'
-  if rcv.find(index) >= 0:
-    string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
-  else:
-    string.append('0')
-  index = 's="'
-  if rcv.find(index) >= 0:
-    string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
-  else:
-    string.append('0')
-  index = 't="'
-  if rcv.find(index) >= 0:
-    string.append(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int((rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)])))))
-  else:
-    string.append('0')
-  index = '" l="'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+5:rcv.find('"',rcv.find(index)+5)])))
-  else:
-    string.append('0')
-  index = 'i="1"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="2"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="3"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="4"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="5"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="6"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="7"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="8"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="9"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="A"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])) + '')
-  else:
-    string.append('0')
-  index = 'i="B"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2float(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])) + '')
-  else:
-    string.append('0')
-  index = 'i="C"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="D"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])))
-  else:
-    string.append('0')
-  index = 'i="E"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="F"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="10"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+7:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="12"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+7:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  index = 'i="11"'
-  if rcv.find(index) >= 0:
-    string.append(str(converthex2int(rcv[rcv.find(index)+7:rcv.find('<',rcv.find(index))])/10))
-  else:
-    string.append('0')
-  returnval = (str(string).replace("', '",';').replace("['",'').replace("']",'\r\n').replace(".",','))
-  print(returnval)
-  return returnval
-
-def decodeerr(rcv):#Störungen decodieren
-  string = []
-
-  index = 'm="'
-  if rcv.find(index) >= 0:
-    string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
-  else:
-    string.append('0')
-  index = 's="'
-  if rcv.find(index) >= 0:
-    string.append(str(rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)]))
-  else:
-    string.append('0')
-  index = 't="'
-  if rcv.find(index) >= 0:
-    string.append(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int((rcv[rcv.find(index)+3:rcv.find('"',rcv.find(index)+3)])))))
-  else:
-    string.append('0')
-  index = '<code>'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index)+6)])))
-  else:
-    string.append('0')
-  index = '<state>'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+7:rcv.find('<',rcv.find(index)+7)])))
-  else:
-    string.append('0')
-  index = '<short>'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+7:rcv.find('<',rcv.find(index)+7)])))
-  else:
-    string.append('0')
-  index = '<long>'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index)+6)])))
-  else:
-    string.append('0')
-  index = '<type>'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+6:rcv.find('<',rcv.find(index)+6)])))
-  else:
-    string.append('0')
-  index = '<actstate>'
-  if rcv.find(index) >= 0:
-    string.append(str((rcv[rcv.find(index)+10:rcv.find('<',rcv.find(index)+10)])))
-  else:
-    string.append('0')
-  returnval = (str(string).replace("', '",';').replace("['",'').replace("']",'\r\n').replace(".",','))
-  print(returnval)
-  return returnval
-
-#Hier startet Main prg
-def main():
-  global server_socket
-  #Init TCP-Server
-  server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-  #Server binden mit der IP des Raspi
-  #server_socket.bind((socket.gethostbyname(socket.gethostname()), 80))
-  #Raspi muss eine fixe IP haben!
-  server_socket.bind(('192.168.0.212', 80))
-
-  while True:
-    rcvdatenstring = ''
-    rcdvMessageBytes = string2bytes('')
-    server_socket.listen(5) # Socket beobachten
-    client_serving_socket, addr = server_socket.accept()
-    print('Listening for data...')
-    while True:
-      rcvbytes = client_serving_socket.recv(1024) # Daten empfangen
-
-      rcvdatenstring = rcvdatenstring + bytes2string(rcvbytes)
-      rcvok = rcvdatenstring.find('xmlData')
-      # print(rcvok)
-      if rcvok >= 0:#Solange Daten lesen, bis xmlData empfangen wurden
-        rcdvMessageBytes = rcdvMessageBytes+rcvbytes
-        break
-      else:
-        rcdvMessageBytes = rcdvMessageBytes+rcvbytes
-
-    # Create HTTP Request object
-    print("================= Begin HTTP object =================")
-    r = Request(bytes2string(rcdvMessageBytes))
-    print(r.command)
-    print(r.path)
-    print(r.version)
-
-    for header in r.headers:
-        print(header, r[header])
-
-    print(r.content)
-
-    print("================= End HTTP object =================")
-
-    # print("single header:", response.getheader('Content-Type'))
-
-    """
-    #Sende zu Sitelink
-    server_addr = ('aesitelink.de', 80)
+def send2portal(addr,port,data):
+    #Sende zu Sitelink/Refu-Log Portal
+    server_addr = (addr, port)
     print(server_addr)
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(server_addr)
-    client_socket.send(block)
-    print(bytes2string(block))
-    
-    daten = client_socket.recv(1024)
-    datenstring = bytes2string(daten)
-    print(datenstring)
-    """
-    
-    """
-    #Sende zu Refulog
-    server_addr = ('refu-log.de', 80)
-    print(server_addr)
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(server_addr)
-    client_socket.send(block)#Sende empfangene Daten von WR zu Portal
-    daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
-    datenstring = bytes2string(daten)
-    print("Begin Datenstring refu-log.de-----------------------------")
-    print(datenstring)
-    print("Ende  Datenstring refu-log.de-----------------------------")
-    
-
+    try:
+      client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      client_socket.settimeout(5)
+      client_socket.connect(server_addr)
+      sendcontent = data[data.find('xmlData'):]
+      senddata = ('POST /InverterService/InverterService.asmx/CollectInverterData HTTP/1.1\r\n'
+                  +'Host: ' + addr + '\r\n'
+                  +'Content-Type: application/x-www-form-urlencoded\r\n'
+                  +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
+                  +'\r\n'
+                  + sendcontent)
+      print('Senddata: ' + senddata)
+      client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
+      daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
+      datenstring = bytes2string(daten)
+      print(datenstring)
+    except BaseException as e:
+      print(str(e) + '\r\n')
     client_socket.close()
     del client_socket
 
-    """
-    
+def getokmsg():
+	return ('HTTP/1.1 200 OK'
+	+'Cache-Control: private, max-age=0'
+	+'Content-Type: text/xml; charset=utf-8\r\n'
+	+'Content-Length: 83\r\n'
+	+'\r\n'
+	+'<?xml version="1.0" encoding="utf-8"?>'
+	+'<string xmlns="InverterService">OK</string>\r\n')
 
-    #Dem WR eine OK Nachricht schicken
-    client_serving_socket.send(string2bytes('HTTP/1.1 200 OK'
-    +'Cache-Control: private, max-age=0'
-    +'Content-Type: text/xml; charset=utf-8\r\n'
-    +'Content-Length: 83\r\n'
-    +'\r\n'
-    +'<?xml version="1.0" encoding="utf-8"?>'
-    +'<string xmlns="InverterService">OK</string>\r\n'))
+# =======================
+# Main-function
+# =======================
+def main():
+	global server_socket
+	#Init TCP-Server
+	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    client_serving_socket.close()
-    del client_serving_socket
+	#Server binden mit der IP des Raspi
+	#server_socket.bind((socket.gethostbyname(socket.gethostname()), 80))
+	#Raspi muss eine fixe IP haben!
+	server_socket.bind(('192.168.0.212', 80))
+
+	while True:
+		print('Listening for data...')
+		rcdvMessageString = ''
+		rcdvMessageBytes = string2bytes('')
+		server_socket.listen(5) # Socket beobachten
+		client_serving_socket, addr = server_socket.accept()
+		while True:
+			rcvbytes = client_serving_socket.recv(1024) # Daten empfangen
+
+			rcdvMessageString = rcdvMessageString + bytes2string(rcvbytes)
+			rcvok = rcdvMessageString.find('xmlData')
+			# print(rcvok)
+			if rcvok >= 0:#Solange Daten lesen, bis xmlData empfangen wurden
+				rcdvMessageBytes = rcdvMessageBytes+rcvbytes
+				break
+			else:
+				rcdvMessageBytes = rcdvMessageBytes+rcvbytes
+
+		# Create HTTP Request object
+		print("================= Begin HTTP object =================")
+		r = Request(bytes2string(rcdvMessageBytes))
+		print(r.command)
+		print(r.path)
+		print(r.version)
+
+		for header in r.headers:
+			print(header, r[header])
+
+		print(r.content)
+
+		if r.content.find("xmlData")>=0:
+		    data = r.content[8:] # remove: "xmldata=""
+		    # print(data)
+
+		    tree = ET.ElementTree(ET.fromstring(data))
+		    root = tree.getroot()
+
+		    # Iterate all p-Elements
+		    for xy in root.find('d').findall('p'):
+		        _type = dicP[xy.get('i')]['type']  # Lese Typ aus Dictionary
+		        _factor = dicP[xy.get('i')]['factor']  # Lese Faktor aus Dictionary
+		        _valueHex = xy.text
+
+		        if _type == "float":
+		            value = converthex2float(_valueHex)
+		        elif _type == "signed16":
+		            value = convertHex2SignedInt16bit(_valueHex)
+		        elif _type == "unsigned32":
+		            value = int(_valueHex, 16)
+		        else:
+		            print("Something went wrong.")
+
+		        print(xy.get('i'), ": ", value/_factor)
+
+		# Just example to navigate through dictionary
+		# for _key in dicP:
+		#	print(dicP[_key]['desc'])
+
+		print("================= End HTTP object =================")
+
+		#Sende zu Sitelink, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
+		send2portal('aesitelink.de', 80, rcdvMessageString)
+		#Sende zu Refu-log, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
+		send2portal('refu-log.de', 80, rcdvMessageString)
+
+		# Dem Wechselrichter eine OK Nachricht schicken
+		client_serving_socket.send(string2bytes(getokmsg()))
+		
+		# Close connection
+		client_serving_socket.close()
+		del client_serving_socket
+
+		f = open('logfile.txt', 'at', encoding='utf-8')
+		f.write(r.content)
+		f.close()
+
+		"""
+		#Werte dekodieren und in csv schreiben
+		#Define Pfad für CSV-Files
+		datalogfile = "./data/" + time.strftime("%Y_%m_DataSinvert") + '.csv'
+		errlogfile = "./error/" + time.strftime("%Y_%m_ErrSinvert") + '.csv'
+
+		#Prüfe ob Störungen oder Daten empfangen wurden
+		if rcvdatenstring.find('<rd m="') >= 0:#Wenn Daten empfangen, dann in datalogfile schreiben
+
+			try:#Prüfe ob Datei existiert
+				f = open(datalogfile, 'r')
+				#lastline = f.readlines()[-1]
+				#print(lastline)
+				f.close()
+			except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufügen
+				print(str(e) + '\r\n')
+				initdatalogfile(datalogfile)
+			#Daten in File schreiben
+			f = open(datalogfile, 'a')
+			f.write(decodedata(rcvdatenstring))
+			f.close()
+			
+		elif rcvdatenstring.find('<re m="') >= 0:#Wenn Daten empfangen, dann in errlogfile schreiben
+
+			try:#Prüfe ob Datei existiert
+				f = open(errlogfile, 'r')
+				#lastline = f.readlines()[-1]
+				#print(lastline)
+				f.close()
+			except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufügen
+				print(str(e) + '\r\n')
+				initerrlogfile(errlogfile)
+			#Daten in File schreiben
+			f = open(errlogfile, 'a')
+			f.write(decodeerr(rcvdatenstring))
+			f.close()
+		else:#Bei falschem Format nur Ausgeben
+			print('Falsches Datenformat empfangen!\r\n')
+			print(rcvdatenstring)
+		"""
 
 
-    """
-    #Werte dekodieren und in csv schreiben
-    #Define Pfad für CSV-Files
-    datalogfile = "./data/" + time.strftime("%Y_%m_DataSinvert") + '.csv'
-    errlogfile = "./error/" + time.strftime("%Y_%m_ErrSinvert") + '.csv'
-
-    #Prüfe ob Störungen oder Daten empfangen wurden
-    if rcvdatenstring.find('<rd m="') >= 0:#Wenn Daten empfangen, dann in datalogfile schreiben
-
-      try:#Prüfe ob Datei existiert
-        f = open(datalogfile, 'r')
-        #lastline = f.readlines()[-1]
-        #print(lastline)
-        f.close()
-      except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufügen
-        print(str(e) + '\r\n')
-        initdatalogfile(datalogfile)
-      #Daten in File schreiben
-      f = open(datalogfile, 'a')
-      f.write(decodedata(rcvdatenstring))
-      f.close()
-      
-    elif rcvdatenstring.find('<re m="') >= 0:#Wenn Daten empfangen, dann in errlogfile schreiben
-
-      try:#Prüfe ob Datei existiert
-        f = open(errlogfile, 'r')
-        #lastline = f.readlines()[-1]
-        #print(lastline)
-        f.close()
-      except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufügen
-        print(str(e) + '\r\n')
-        initerrlogfile(errlogfile)
-      #Daten in File schreiben
-      f = open(errlogfile, 'a')
-      f.write(decodeerr(rcvdatenstring))
-      f.close()
-    else:#Bei falschem Format nur Ausgeben
-      print('Falsches Datenformat empfangen!\r\n')
-      print(rcvdatenstring)
-    """
-
-#while True:
-try:
-  main()
-except BaseException as e:#bei einer Exception Verbindung schließen und neu starten
-  print(str(e) + '\r\n')
-  server_socket.close()
-  del server_socket
-#ServerEnde
+# =======================
+# Main
+# =======================
+if __name__ == "__main__":
+	try:
+		main()
+	except BaseException as e:#bei einer Exception Verbindung schließen und neu starten
+		print(str(e) + '\r\n')
+		server_socket.close()
+		del server_socket
