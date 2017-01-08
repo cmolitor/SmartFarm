@@ -176,27 +176,28 @@ def main():
 
 		if r.content.find("xmlData")>=0:
 		    data = r.content[8:] # remove: "xmldata=""
-		    # print(data)
+		    print(data)
 
 		    tree = ET.ElementTree(ET.fromstring(data))
 		    root = tree.getroot()
+		    print("root: ", root)
 
 		    # Iterate all p-Elements
-		    for xy in root.find('d').findall('p'):
-		        _type = dicP[xy.get('i')]['type']  # Lese Typ aus Dictionary
-		        _factor = dicP[xy.get('i')]['factor']  # Lese Faktor aus Dictionary
-		        _valueHex = xy.text
+		    # for xy in root.find('d').findall('p'):
+		    #     _type = dicP[xy.get('i')]['type']  # Lese Typ aus Dictionary
+		    #     _factor = dicP[xy.get('i')]['factor']  # Lese Faktor aus Dictionary
+		    #     _valueHex = xy.text
 
-		        if _type == "float":
-		            value = converthex2float(_valueHex)
-		        elif _type == "signed16":
-		            value = convertHex2SignedInt16bit(_valueHex)
-		        elif _type == "unsigned32":
-		            value = int(_valueHex, 16)
-		        else:
-		            print("Something went wrong.")
+		    #     if _type == "float":
+		    #         value = converthex2float(_valueHex)
+		    #     elif _type == "signed16":
+		    #         value = convertHex2SignedInt16bit(_valueHex)
+		    #     elif _type == "unsigned32":
+		    #         value = int(_valueHex, 16)
+		    #     else:
+		    #         print("Something went wrong.")
 
-		        print(xy.get('i'), ": ", value/_factor)
+		    #     print(xy.get('i'), ": ", value/_factor)
 
 		# Just example to navigate through dictionary
 		# for _key in dicP:
