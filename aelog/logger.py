@@ -172,7 +172,7 @@ def main():
 		for header in r.headers:
 			print(header, r[header])
 
-		print(r.content)
+		print("r.content: ", r.content)
 
 		if r.content.find("xmlData")>=0:
 		    data = r.content[8:] # remove: "xmldata=""
