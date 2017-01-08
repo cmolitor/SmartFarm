@@ -44,18 +44,18 @@ sudo python3 nameDerDatei.py
 """
 
 class Request:
-	def __init__(self, request):
-		stream = StringIO(request)
-		request = stream.readline()
+    def __init__(self, request):
+        stream = StringIO(request)
+        request = stream.readline()
 
-		words = request.split()
-		[self.command, self.path, self.version] = words
+        words = request.split()
+        [self.command, self.path, self.version] = words
 
-		self.headers = email.message_from_string(request)
-		self.content = stream.read()
-
-	def __getitem__(self, key):
-		return self.headers.get(key, '')
+        [trash, self.host] = stream.readline().split()
+        [trash, self.contenttype] = stream.readline().split()
+        [trash, self.contentlength] = stream.readline().split()
+        stream.readline()
+        self.content = stream.read()
 
 def byteorder():
 	return sys.byteorder
@@ -176,7 +176,7 @@ def main():
 
 		if r.content.find("xmlData")>=0:
 		    data = r.content[8:] # remove: "xmldata=""
-		    print(data)
+		    print("data: ", data)
 
 		    tree = ET.ElementTree(ET.fromstring(data))
 		    root = tree.getroot()
