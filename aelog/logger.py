@@ -169,8 +169,8 @@ def main():
 		print(r.path)
 		print(r.version)
 
-		for header in r.headers:
-			print(header, r[header])
+		# for header in r.headers:
+		# 	print(header, r[header])
 
 		print("r.content: ", r.content)
 
