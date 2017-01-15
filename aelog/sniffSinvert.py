@@ -423,7 +423,11 @@ def main():
       else:
         block = block+rcvbytes
         rcvbytes = string2bytes('')
-    
+
+    f = open('logfile_sniffer.txt', 'at', encoding='utf-8')
+    f.write(rcvdatenstring)
+    f.close()
+
     #Sende zu Sitelink, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
     send2portal('aesitelink.de', 80, rcvdatenstring)
     #Sende zu Refu-log, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
