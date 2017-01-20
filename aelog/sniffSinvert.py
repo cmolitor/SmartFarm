@@ -429,7 +429,7 @@ def main():
     f.close()
 
     #Sende zu Sitelink, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
-    send2portal('aesitelink.de', 80, rcvdatenstring)
+    #send2portal('aesitelink.de', 80, rcvdatenstring)
     #Sende zu Refu-log, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
     send2portal('refu-log.de', 80, rcvdatenstring)    
 
