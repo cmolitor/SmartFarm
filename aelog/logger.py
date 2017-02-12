@@ -112,7 +112,7 @@ def send2portal(addr,port,data):
                   +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
                   +'\r\n'
                   + sendcontent)
-      print('Senddata: ' + senddata)
+      # print('Senddata: ' + senddata)
       client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
       daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
       datenstring = bytes2string(daten)

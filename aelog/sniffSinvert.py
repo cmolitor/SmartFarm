@@ -410,7 +410,8 @@ def main():
     while True:
       try:
         rcvbytes = client_serving_socket.recv(1024)#Daten empfangen
-        print(bytes2string(rcvbytes))
+        # print(bytes2string(rcvbytes))
+        print("================= Begin new message =================")
         rcvdatenstring = rcvdatenstring + bytes2string(rcvbytes)
         rcvok = rcvdatenstring.find('xmlData')
         print(rcvok)
@@ -423,6 +424,8 @@ def main():
       else:
         block = block+rcvbytes
         rcvbytes = string2bytes('')
+
+    print("================= End new message =================")
 
     f = open('logfile_sniffer.txt', 'at', encoding='utf-8')
     f.write(rcvdatenstring)
