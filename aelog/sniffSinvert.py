@@ -329,11 +329,11 @@ def send2portal(addr,port,data):
                   +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
                   +'\r\n'
                   + sendcontent)
-      print('Senddata: ' + senddata)
+      print('Senddata: ' + senddata + ' :EndSenddata\r\n')
       client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
       daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
       datenstring = bytes2string(daten)
-      print(datenstring)
+      print('Reply: ' + datenstring + ' :EndReply\r\n')
     except BaseException as e:
       print(str(e) + '\r\n')
     client_socket.close()
@@ -407,11 +407,11 @@ def main():
     client_serving_socket, addr = server_socket.accept()
     client_serving_socket.settimeout(5)
   
+    print("================= Begin new message =================")
     while True:
       try:
         rcvbytes = client_serving_socket.recv(1024)#Daten empfangen
         # print(bytes2string(rcvbytes))
-        print("================= Begin new message =================")
         rcvdatenstring = rcvdatenstring + bytes2string(rcvbytes)
         rcvok = rcvdatenstring.find('xmlData')
         print(rcvok)
@@ -481,6 +481,7 @@ def main():
     else:#Bei falschem Format nur Ausgeben
       print('Falsches Datenformat empfangen!\r\n')
       print(rcvdatenstring)
+      print(' :End Falsches Datenformat empfangen!\r\n')
       #Dem WR eine OK Nachricht schicken
       client_serving_socket.send(string2bytes(getokmsg()))
 
