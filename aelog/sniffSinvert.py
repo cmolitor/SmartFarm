@@ -315,29 +315,34 @@ def decodeerr(rcv):#Störungen decodieren
   return returnval
 
 def send2portal(addr,port,data):
-    #Sende zu Sitelink/Refu-Log Portal
-    server_addr = (addr, port)
-    print(server_addr)
-    try:
-      client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      client_socket.settimeout(5)
-      client_socket.connect(server_addr)
-      sendcontent = data[data.find('xmlData'):]
-      senddata = ('POST /InverterService/InverterService.asmx/CollectInverterData HTTP/1.1\r\n'
-                  +'Host: refu-log.de\r\n'
-                  +'Content-Type: application/x-www-form-urlencoded\r\n'
-                  +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
-                  +'\r\n'
-                  + sendcontent)
-      print('Senddata: ' + senddata + ' :EndSenddata\r\n')
-      client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
-      daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
-      datenstring = bytes2string(daten)
-      print('Reply: ' + datenstring + ' :EndReply\r\n')
-    except BaseException as e:
-      print(str(e) + '\r\n')
-    client_socket.close()
-    del client_socket
+  #Sende zu Sitelink/Refu-Log Portal
+  print("Marker 0.1")
+  server_addr = (addr, port)
+  print(server_addr)
+  try:
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.settimeout(5)
+    client_socket.connect(server_addr)
+    sendcontent = data[data.find('xmlData'):]
+    senddata = ('POST /InverterService/InverterService.asmx/CollectInverterData HTTP/1.1\r\n'
+                +'Host: refu-log.de\r\n'
+                +'Content-Type: application/x-www-form-urlencoded\r\n'
+                +'Content-Length: ' + str(len(sendcontent)) + '\r\n'
+                +'\r\n'
+                + sendcontent)
+    print('Senddata: ' + senddata + ' :EndSenddata\r\n')
+    client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
+    daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
+    datenstring = bytes2string(daten)
+    print('Reply: ' + datenstring + ' :EndReply\r\n')
+  except BaseException as e:
+    print(str(e) + '\r\n')
+
+  print("Marker 0.2")
+  client_socket.close()
+  print("Marker 0.3")
+  del client_socket
+  print("Marker 0.4")
 
 def getokmsg():
     return ('HTTP/1.1 200 OK'
