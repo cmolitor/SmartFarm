@@ -436,11 +436,12 @@ def main():
     #Sende zu Refu-log, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
     send2portal('refu-log.de', 80, rcvdatenstring)    
 
+    print("Marker 1")
     #Werte dekodieren und in csv schreiben
 
     #Prüfe ob Störungen oder Daten empfangen wurden
     if rcvdatenstring.find('<rd') >= 0:#Wenn Daten empfangen, dann in datalogfile schreiben
-
+      print("Marker 2")
       try:#Prüfe ob Datei existiert
         f = open(datalogfile, 'r')
         #lastline = f.readlines()[-1]
@@ -455,9 +456,9 @@ def main():
       f.close()
       #Dem WR eine OK Nachricht schicken
       client_serving_socket.send(string2bytes(getokmsg()))
-      
+      print("Marker 3")
     elif rcvdatenstring.find('<re') >= 0:#Wenn Errordaten empfangen, dann in errlogfile schreiben
-
+      print("Marker 4")
       try:#Prüfe ob Datei existiert
         f = open(errlogfile, 'r')
         #lastline = f.readlines()[-1]
@@ -472,22 +473,24 @@ def main():
       f.close()
       #Dem WR eine OK Nachricht schicken
       client_serving_socket.send(string2bytes(getokmsg()))
-      
+      print("Marker 5")
     elif rcvdatenstring.find('<crq>') >= 0:#Wenn Steuerdaten empfangen, dann in Uhrzeit setzen
       #Dem WR aktuelle Uhrzeit schicken schicken
       client_serving_socket.send(string2bytes(gettimemsg()))
-
-
+      print("Marker 6")
     else:#Bei falschem Format nur Ausgeben
+      print("Marker 7")
       print('Falsches Datenformat empfangen!\r\n')
       print(rcvdatenstring)
       print(' :End Falsches Datenformat empfangen!\r\n')
       #Dem WR eine OK Nachricht schicken
       client_serving_socket.send(string2bytes(getokmsg()))
+      print("Marker 8")
 
     #Verbindung schließen
     client_serving_socket.close()
     del client_serving_socket
+    print("Marker 9")
 
 
 while True:
