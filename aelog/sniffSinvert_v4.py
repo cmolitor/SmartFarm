@@ -16,7 +16,7 @@ if sys.hexversion < minpythonversion:
 # -- Anbindung zu Volkszaehler ergaenzt
 # -- Logging ergaenzt
 # -- # -*- coding: utf-8 -*- und Ueberpruefung der Python version ergaenzt
-# -- Standardmaeßig wird jetzt Port 8080 fuer dieses prg verwendent, da auf port 80 der Dateizugriff auf den raspi manchmal nicht funktioniert(iptables müssen auch angepasst werden)
+# -- StandardmÃ¤ÃŸg wird jetzt Port 8080 fuer dieses prg verwendent, da auf port 80 der Dateizugriff auf den raspi manchmal nicht funktioniert(iptables mÃ¼ssen auch angepasst werden)
 # -- Weiterleitung der Rohdaten vom WR jetzt ueber Schleife realisiert, 
 # Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
 # Getestet mit einem Sinvert PVM20 und einem RaspberryPi B
@@ -60,9 +60,9 @@ if sys.hexversion < minpythonversion:
 # - Stoerungsnummern wandeln in Stoerungstext
 
 
-#Define Pfad für CSV-Files, sind den eigenen Bedürfnissen anzupassen 
-#datalogfile = "E:\" + time.strftime("\%Y_%m_DataSinvert") + '.csv' #Beispiel für Windows
-#errlogfile = "E:\" + time.strftime("\%Y_%m_ErrSinvert") + '.csv'#Beispiel für Windows
+#Define Pfad fÃ¼r CSV-Files, sind den eigenen BedÃ¼rfnissen anzupassen 
+#datalogfile = "E:\" + time.strftime("\%Y_%m_DataSinvert") + '.csv' #Beispiel fÃ¼r Windows
+#errlogfile = "E:\" + time.strftime("\%Y_%m_ErrSinvert") + '.csv'#Beispiel fÃ¼r Windows
 
 datalogpath = "/home/pi/"
 errlogpath = "/home/pi/"
@@ -76,28 +76,28 @@ datalogfile = datalogpath + time.strftime("%Y_%m_") + datalogfilename
 errlogfile = errlogpath + time.strftime("%Y_%m_") + errlogfilename
 loggingfile = loggingpath + time.strftime("%Y_%m_") + loggingfilename
 
-#Zeichenfolgen für Daten sind bei den verschiedenen Firmwareständen unterschiedlich:
+#Zeichenfolgen fÃ¼r Daten sind bei den verschiedenen FirmwarestÃ¤nden unterschiedlich:
 #je nach Firmware mit "#" auskommentieren bzw. einkommentieren
 
-#macaddr,endmacaddr = 'm="','"'#für neuere firmwares
-macaddr,endmacaddr = '<m>','</m>'#für ältere firmwares
+#macaddr,endmacaddr = 'm="','"'#fÃ¼r neuere firmwares
+macaddr,endmacaddr = '<m>','</m>'#fÃ¼r Ã¤ltere firmwares
 
-#firmware,endfirmware = 's="','"'#für neuere firmwares
-firmware,endfirmware = '<s>','</s>'#für ältere firmwares
+#firmware,endfirmware = 's="','"'#fÃ¼r neuere firmwares
+firmware,endfirmware = '<s>','</s>'#fÃ¼r Ã¤ltere firmwares
 
 rasp_ip = '192.168.0.212' #IP- des Raspi angeben, wenn keine IP angeben wird ==> Raspi lauscht auf allen zugewiesenen IP Adressen
 rasp_port = 8080 #Port auf dem das prg am raspi lauscht
 
 #Server, an dessen die Daten 1:1 durchgereicht werden, Format: [('ipserver1',portserver1),('ipserver2',portserver2),usw...]
-#Es können beliebig viele Server angegeben werden, diese werden in einer Schleife abgearbeitet
+#Es k?nnen beliebig viele Server angegeben werden, diese werden in einer Schleife abgearbeitet
 #Wenn an keine Server weitergereicht werden soll, dann: rawdataserver = []
 rawdataserver = [('refu-log.de', 80)]
 
 
-#Konfiguration Volkszählerserver:
-#Sende Daten an Volkszählerserver: vz = 1, nicht an volkszähler senden: vz = 0
+#Konfiguration Volksz?lerserver:
+#Sende Daten an Volksz?lerserver: vz = 1, nicht an volksz?ler senden: vz = 0
 vz = 0
-#IP-Adresse und Port des Volkszählerservers, wenn Volkszähler auf dem selben rechner läuft wie dieses Programm, dann localhost angeben: vz_ip = ('127.0.0.1',80)
+#IP-Adresse und Port des Volksz?lerservers, wenn Volksz?ler auf dem selben rechner l?ft wie dieses Programm, dann localhost angeben: vz_ip = ('127.0.0.1',80)
 vz_adress = ('10.0.0.13',80)
 
 #init logstring
@@ -105,13 +105,13 @@ logstring = ''
 
 if vz:
   try:
-    # import volkszählertestV2 as vzlogger
+    # import volksz?lertestV2 as vzlogger
     vzlogger.vzinit(vz_adress)
   except BaseException as e:
     vz = 0
-    print('Fehler beim import der Volkszähleranbindung, Volkszähler wird deaktiviert')
+    print('Fehler beim import der VolkszÃ¤hleranbindung, Volksz?ler wird deaktiviert')
     print(str(e) + '\r\n')
-    logstring += str(e) + '\r\n' + 'Fehler beim import der Volkszähleranbindung, Volkszähler wird deaktiviert\r\n'
+    logstring += str(e) + '\r\n' + 'Fehler beim import der VolkszÃ¤hleranbindung, VolkszÃ¤hler wird deaktiviert\r\n'
 
 def byteorder():
   global logstring
@@ -167,16 +167,16 @@ def initdatalogfile(datalogfile):
   string.append('DC Momentanleistung [W]')
   string.append('DC-Spannung [V]')
   string.append('DC-Strom [A]')
-  string.append('Temperatur 1 Kühlkörper rechts [°C]')
-  string.append('Temperatur 2 innen oben links [°C]')
-  string.append('Sensor 1 Messwert, Einstrahlung [W/m²]')
-  string.append('Sensor 2 Messwert, Modultemperatur [°C]')
+  string.append('Temperatur 1 Kuehlkoerper rechts [Â°C]')
+  string.append('Temperatur 2 innen oben links [Â°C]')
+  string.append('Sensor 1 Messwert, Einstrahlung [W/m^2]')
+  string.append('Sensor 2 Messwert, Modultemperatur [Â°C]')
   string.append('Tagesertrag [kwh]')
   string.append('Status')
   string.append('Gesamtertrag [kwh]')
   string.append('Betriebsstunden [h]')
-  string.append('scheinbar nur ältere FW?')
-  string.append('"neuere" FW: 100.0% Leistungsbeschränkung [%]')
+  string.append('scheinbar nur Ã¤ltere FW?')
+  string.append('"neuere" FW: 100.0% LeistungsbeschrÃ¤kung [%]')
   string.append('"neuere" FW, vielleicht: 0.0 kWh Tagessonnenenergie')
   returnval = (str(string).replace("', '",';').replace("['",'').replace("']",'\r\n'))
   f = open(datalogfile, 'a')
@@ -340,7 +340,7 @@ def decodedata(rcv):#Daten decodieren
   print(returnval)
   return returnval
 
-def decodeerr(rcv):#Störungen decodieren
+def decodeerr(rcv):#StÃ¶rungen decodieren
   global logstring
   string = []
 
@@ -412,7 +412,7 @@ def send2portal(server_addr,data):
       #print('Senddata: ' + senddata)
       client_socket.send(string2bytes(senddata))#Sende empfangene Daten von WR zu Portal
       logstring += 'Sende Daten zu ' + str(server_addr) + ':\r\n' + str(sendcontent) + '\r\n'
-      daten = client_socket.recv(1024)#Empfange Rückmeldung von Portal
+      daten = client_socket.recv(1024)#Empfange RÃ¼ckmeldung von Portal
       datenstring = bytes2string(daten)
       #print(datenstring)
       logstring += 'Empfange Daten von ' + str(server_addr) + ':\r\n' + str(datenstring) + '\r\n'
@@ -424,13 +424,13 @@ def send2portal(server_addr,data):
 
 def send2vz(server_addr,csvdata):
     global logstring
-    #Sende zu Volkszählerserver
+    #Sende zu VolkszÃ¤lerserver
     print(server_addr)
     try:
       #print(csvdata)
       data = csvdata.replace(',','.').split(';')
       #print(data)
-      timestamp = str(int(time.mktime(time.strptime(data[2],'%Y-%m-%d %H:%M:%S')) * 1000))#Format in millisekunden und UTC für volkszähler
+      timestamp = str(int(time.mktime(time.strptime(data[2],'%Y-%m-%d %H:%M:%S')) * 1000))#Format in millisekunden und UTC fÃ¼r volkszÃ¤hler
       print(timestamp)
       #print(vzlogger.storedata(server_addr,vzlogger.parameter['mac']['uuid'],timestamp,data[0]))
       #print(vzlogger.storedata(server_addr,vzlogger.parameter['serial']['uuid'],timestamp,data[1]))
@@ -446,16 +446,16 @@ def send2vz(server_addr,csvdata):
       string.append('DC Momentanleistung [W]')
       string.append('DC-Spannung [V]')
       string.append('DC-Strom [A]')
-      string.append('Temperatur 1 Kühlkörper rechts [°C]')
-      string.append('Temperatur 2 innen oben links [°C]')
-      string.append('Sensor 1 Messwert, Einstrahlung [W/m²]')
-      string.append('Sensor 2 Messwert, Modultemperatur [°C]')
+      string.append('Temperatur 1 KÃ¼hlkÃ¶rper rechts [Â°C]')
+      string.append('Temperatur 2 innen oben links [Â°C]')
+      string.append('Sensor 1 Messwert, Einstrahlung [W/m^2]')
+      string.append('Sensor 2 Messwert, Modultemperatur [Â°C]')
       string.append('Tagesertrag [kwh]')
       string.append('Status')
       string.append('Gesamtertrag [kwh]')
       string.append('Betriebsstunden [h]')
-      string.append('scheinbar nur ältere FW?')
-      string.append('"neuere" FW: 100.0% Leistungsbeschränkung [%]')
+      string.append('scheinbar nur Ã¤ltere FW?')
+      string.append('"neuere" FW: 100.0% LeistungsbeschrÃ¤nkung [%]')
       string.append('"neuere" FW, vielleicht: 0.0 kWh Tagessonnenenergie')
       print(vzlogger.storedata(server_addr,vzlogger.parameter['timestamp']['uuid'],timestamp,timestamp))
       print(vzlogger.storedata(server_addr,vzlogger.parameter['interval']['uuid'],timestamp,data[3]))
@@ -532,7 +532,7 @@ def gettimemsg():
   except BaseException as e:
     print('Can`t get NTP-Time' + str(e) + '\r\n')
     logstring += str(e) + '\r\n' + 'Can`t get NTP-Time!' + '\r\n'
-    return getokmsg()#Wenn Zeit holen nicht möglich, nur Ok message schicken
+    return getokmsg()#Wenn Zeit holen nicht mÃ¶glich, nur Ok message schicken
 
 #Hier startet Main prg
 def main():
@@ -542,7 +542,7 @@ def main():
   global rawdataserver
   #Init TCP-Server
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)#Bei Neustart wiederverwenden des Sockets ermöglichen
+  server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)#Bei Neustart wiederverwenden des Sockets ermÃ¶glichen
   #Server binden mit der IP des Raspi
   #server_socket.bind((socket.gethostbyname(socket.gethostname()), 80))
   #Raspi muss eine fixe IP haben!
@@ -571,7 +571,7 @@ def main():
       except BaseException as e:
         print(str(e) + '\r\n')
         print(rcvbytes)
-        logstring += str(e) + '\r\n' + 'Error während lesen von WR!' + '\r\n' + str(rcvbytes) + '\r\n'
+        logstring += str(e) + '\r\n' + 'Error wÃ¤hrend lesen von WR!' + '\r\n' + str(rcvbytes) + '\r\n'
       if (rcvok >= 0) or (not rcvbytes):#Solange Daten lesen, bis xmlData empfangen wurden
         block = block+rcvbytes
         break
@@ -585,15 +585,15 @@ def main():
     datalogfile = datalogpath + time.strftime("%Y_%m_") + datalogfilename
     errlogfile = errlogpath + time.strftime("%Y_%m_") + errlogfilename
     loggingfile = loggingpath + time.strftime("%Y_%m_") + loggingfilename
-    #Prüfe ob Störungen oder Daten empfangen wurden
+    #PrÃ¼fe ob StÃ¶rungen oder Daten empfangen wurden
     if rcvdatenstring.find('<rd') >= 0:#Wenn Daten empfangen, dann in datalogfile schreiben
 
-      try:#Prüfe ob Datei existiert
+      try:#PrÃ¼fe ob Datei existiert
         f = open(datalogfile, 'r')
         #lastline = f.readlines()[-1]
         #print(lastline)
         f.close()
-      except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufügen
+      except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufÃ¼gen
         print(str(e) + '\r\n')
         logstring += str(e) + '\r\n' + 'Datalogfile existiert nicht ==> neues erstellen!' + '\r\n'
         initdatalogfile(datalogfile)
@@ -607,12 +607,12 @@ def main():
       
     elif rcvdatenstring.find('<re') >= 0:#Wenn Errordaten empfangen, dann in errlogfile schreiben
 
-      try:#Prüfe ob Datei existiert
+      try:#PrÃ¼fe ob Datei existiert
         f = open(errlogfile, 'r')
         #lastline = f.readlines()[-1]
         #print(lastline)
         f.close()
-      except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufügen
+      except BaseException as e:#Wenn nicht dann neue Datei erstellen und Spaltenbeschriftung hinzufÃ¼gen
         print(str(e) + '\r\n')
         logstring += str(e) + '\r\n' + 'Errorlogfile existiert nicht ==> neues erstellen!' + '\r\n'
         initerrlogfile(errlogfile)
@@ -635,7 +635,7 @@ def main():
       #Dem WR eine OK Nachricht schicken
       client_serving_socket.send(string2bytes(getokmsg()))
 
-    #Verbindung schließen
+    #Verbindung schlieÃŸen
     client_serving_socket.close()
     del client_serving_socket
     #Daten in Loggingfile schreiben
@@ -644,10 +644,10 @@ def main():
     f.close()
     logstring = ''
 
-    #Sende zu Datenbankserver, wenn nicht gewünscht, nächste Zeile mit "#" auskommentieren
+    #Sende zu Datenbankserver, wenn nicht gewÃ¼nscht, nÃ¤chste Zeile mit "#" auskommentieren
     for adress in rawdataserver:
       send2portal(adress, rcvdatenstring)
-    #Sende zu Volkszählerserver
+    #Sende zu VolkszÃ¤hlerserver
     if vz:
       send2vz(vz_adress, csvdata)
 
@@ -655,7 +655,7 @@ def main():
 while True:
   try:
     main()
-  except BaseException as e:#bei einer Exception Verbindung schließen und neu starten
+  except BaseException as e:#bei einer Exception Verbindung schlieÃŸen und neu starten
     print(str(e) + '\r\n')
     f = open(loggingfile, 'a')
     f.write(logstring)
