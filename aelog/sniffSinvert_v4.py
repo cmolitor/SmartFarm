@@ -59,6 +59,7 @@ TODO:
  - Codeoptimierungen...
  - Mailversand wenn Störungen auftreten
  - Störungsnummern wandeln in Störungstext
+
 """
 
 #Define Pfad für CSV-Files, sind den eigenen Bedürfnissen anzupassen 
