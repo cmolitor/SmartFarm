@@ -105,7 +105,7 @@ logstring = ''
 
 if vz:
   try:
-    import volkszählertestV2 as vzlogger
+    # import volkszählertestV2 as vzlogger
     vzlogger.vzinit(vz_adress)
   except BaseException as e:
     vz = 0
