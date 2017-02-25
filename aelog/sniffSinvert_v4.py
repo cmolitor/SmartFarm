@@ -14,18 +14,18 @@ if sys.hexversion < minpythonversion:
 
 """
 Version 4:
--- Anbindung zu Volkszähler ergänzt
--- Logging ergänzt
--- # -*- coding: utf-8 -*- und überprüfung der Python version ergänzt
--- Standardmäßig wird jetzt Port 8080 für dieses prg verwendent, da auf port 80 der Dateizugriff auf den raspi manchmal nicht funktioniert(iptables müssen auch angepasst werden)
--- Weiterleitung der Rohdaten vom WR jetzt über Schleife realisiert, 
+-- Anbindung zu Volkszaehler ergaenzt
+-- Logging ergaenzt
+-- # -*- coding: utf-8 -*- und Ueberpruefung der Python version ergaenzt
+-- Standardmaeßig wird jetzt Port 8080 fuer dieses prg verwendent, da auf port 80 der Dateizugriff auf den raspi manchmal nicht funktioniert(iptables müssen auch angepasst werden)
+-- Weiterleitung der Rohdaten vom WR jetzt ueber Schleife realisiert, 
 Programm zum Empfangen von Daten von Refusol/Sinvert/AdvancedEnergy Wechselrichter
 Getestet mit einem Sinvert PVM20 und einem RaspberryPi B
 
 Einstellungen im Wechselrichter:
 IP: Freie IP-Adresse im lokalen Netzwerk
 Netmask: 255.255.255.0
-Gateway: IP-Adresse des Rechners auf dessen dieses Prg läuft(zb. Raspberry),
+Gateway: IP-Adresse des Rechners auf dessen dieses Prg laeuft(zb. Raspberry),
 
 Einstellungen am Rechner(zb. Raspberry)
 routing aktivieren
@@ -41,9 +41,9 @@ Damit dies auch nach einem Neustart funktioniert auch in die crontab eintragen:
 sudo crontab -e
 @reboot sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry;sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
-Im Program muss noch die IP des Raspberry geändert werden,
-sowie die Pfade datalogpath, errlogpath, und loggingpath für den Speicherort der .csv files. Standard: "/home/pi/"
-Die Pfade(Ordner) müssen existieren, diese werden nicht automatisch erzeugt!
+Im Program muss noch die IP des Raspberry geaendert werden,
+sowie die Pfade datalogpath, errlogpath, und loggingpath fuer den Speicherort der .csv files. Standard: "/home/pi/"
+Die Pfade(Ordner) muessen existieren, diese werden nicht automatisch erzeugt!
 
 Start des Programms via Kommandozeile
 sudo python3 /home/pi/RcvSendSinvertDaten_V4.py
@@ -52,13 +52,13 @@ Damit nach Neustart automatisch gestartet wird in crontab eintragen:
 sudo crontab -e
 @reboot sudo python3 /home/pi/RcvSendSinvertDaten_V4.py
 
-Benutzung auf eigene Gefahr! Keine Garantie/Gewährleistung/Schadenersatzansprüche.
+Benutzung auf eigene Gefahr! Keine Garantie/Gewaehrleistung/Schadenersatzansprueche.
 
 TODO:
- - Exceptionhandling optimieren
- - Codeoptimierungen...
- - Mailversand wenn Störungen auftreten
- - Störungsnummern wandeln in Störungstext
+- Exceptionhandling optimieren
+- Codeoptimierungen...
+- Mailversand wenn Stoerungen auftreten
+- Stoerungsnummern wandeln in Stoerungstext
 
 """
 
