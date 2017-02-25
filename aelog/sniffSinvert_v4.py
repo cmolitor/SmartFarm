@@ -7,11 +7,11 @@ import time
 import pickle
 import json
 
-
 minpythonversion = 0x3020000
 if sys.hexversion < minpythonversion:
   print('Python version ' + str(sys.version) + ' is too old, please use Python version 3.2 or newer!')
   sys.exit()
+
 """
 Version 4:
 -- Anbindung zu Volkszähler ergänzt
@@ -64,6 +64,7 @@ TODO:
 #Define Pfad für CSV-Files, sind den eigenen Bedürfnissen anzupassen 
 #datalogfile = "E:\" + time.strftime("\%Y_%m_DataSinvert") + '.csv' #Beispiel für Windows
 #errlogfile = "E:\" + time.strftime("\%Y_%m_ErrSinvert") + '.csv'#Beispiel für Windows
+
 datalogpath = "/home/pi/"
 errlogpath = "/home/pi/"
 loggingpath = "/home/pi/"
