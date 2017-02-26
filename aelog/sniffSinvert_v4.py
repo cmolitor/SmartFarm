@@ -86,7 +86,7 @@ macaddr,endmacaddr = '<m>','</m>'#für ältere firmwares
 firmware,endfirmware = '<s>','</s>'#für ältere firmwares
 
 rasp_ip = '192.168.0.212' #IP- des Raspi angeben, wenn keine IP angeben wird ==> Raspi lauscht auf allen zugewiesenen IP Adressen
-rasp_port = 8080 #Port auf dem das prg am raspi lauscht
+rasp_port = 80 #Port auf dem das prg am raspi lauscht
 
 #Server, an dessen die Daten 1:1 durchgereicht werden, Format: [('ipserver1',portserver1),('ipserver2',portserver2),usw...]
 #Es k?nnen beliebig viele Server angegeben werden, diese werden in einer Schleife abgearbeitet
