@@ -32,6 +32,7 @@ if sys.hexversion < minpythonversion:
 
 # Pakete welche an die IP des Logportals gehen and die IP des Raspi umleiten und auf port 8080
 # sudo iptables -t nat -A PREROUTING -d 88.79.234.30 -j DNAT --to-destination ip.des.rasp.berry --dport 8080
+# hier: sudo iptables -t nat -A PREROUTING -d 195.27.237.106 -j DNAT --to-destination 192.168.0.212 --dport 80
 
 # Pakete als absender die IP des Raspi eintragen
 # sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
